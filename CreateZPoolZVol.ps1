@@ -4,7 +4,7 @@ Write-Output "
 - This script has to be run from the installation folder of zpool and zvol applications � Or the location has to be included in the PATH variable
 - This script takes the second drive available and present it to the zpool command for zpool creation"
 
-# Function to find the secondary disk
+# Function to find the secondary disk and return the deviceid
 function Get-Second-PhysicalDrive
 {
     $disks  = Get-WmiObject Win32_DiskDrive
@@ -95,7 +95,7 @@ $no_zvols_created=$out.length
 if($no_zvols_created -ne $numberf_of_zvols){
    write-host("ZVOL creation is not succesful")
 }else {
-   write-host("$numberf_of_zvols ZVOLs created successfully")
+   write-host("$no_zvols_created ZVOLs created successfully")
 }
 
 }

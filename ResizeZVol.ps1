@@ -24,7 +24,7 @@ function Get-Second-PhysicalDrive
     return $pooldeviceid
   }
 
-# Function to get the zpool status
+  # Function to get the zpool status
 function Get-ZPool-Status
 {
     Param ([String] $commandname,[String] $arguments)
@@ -58,6 +58,7 @@ function Get-ZPool-Status
     }
 }
 
+#Function to Create a ZPool and single ZVol
 function Create-ZVOL($drive,$size,$numberf_of_zvols)
 {
 #Check zfs is installed , any zpool with same name exists
@@ -91,33 +92,19 @@ Get-Disk
 $out=Get-Disk -FriendlyName ZVOL*
 $no_zvols_created=$out.length
 if($no_zvols_created -ne $numberf_of_zvols){
-   write-host("ZVOL creation is not succesful")
+   write-host("ZVol creation is not succesful")
 }else {
-   write-host("$numberf_of_zvols ZVOLs created successfully")
+   write-host("$no_zvols_createds ZVols created successfully")
 }
 }
 
-function Delete-ZVol
+#Function to Resize the zvol
+function Resize-ZVol
 {
-    #Delete zvol
-    Invoke-Expression "zfs destroy -f mypool/vol1"
-    "Deleted zvol mypool/vol1"
-
-    #Verify if zvols are deleted successfully
-    Invoke-Expression "zfs list"
-    Get-Disk
-    $out=Get-Disk -FriendlyName ZVOL*
-    $no_zvols_created=$out.length
-    if($no_zvols_created -eq 0){
-        write-host("ZVol deleted successfully")
-    }
-    else {
-        write-host("ZVol did not delete successfully")
-    }
+    
 }
 
 $no_of_zvol=1
 $size_of_zvol_in_gb=5
 $drive = Get-Second-PhysicalDrive
 Create-Zvol $drive $size_of_zvol_in_gb $no_of_zvol
-
