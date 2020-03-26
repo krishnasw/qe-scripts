@@ -61,6 +61,7 @@ function Get-ZPool-Status
 #Function to Create a ZPool and single ZVol
 function Create-ZVOL($drive,$size,$numberf_of_zvols)
 {
+$Null = @(
 #Check zfs is installed , any zpool with same name exists
 $zpool_status = Get-ZPool-Status "zpool.exe" "status"
 if($zpool_status -eq 10 )
@@ -77,10 +78,13 @@ Invoke-Expression "zpool.exe create -O dedup=on mypool $drive"
 Invoke-Expression "zpool status"
 Invoke-Expression "zfs list"
 
+
+$vol_list = @()
 #Create zvols 
 $i=1
 Do {
     Invoke-Expression "zfs create -V $size.gb mypool/vol$i"
+    $vol_list+="mypool/vol$i"
     "Created zvol mypool/vol$i"
     $i++
     }
@@ -96,34 +100,34 @@ if($no_zvols_created -ne $numberf_of_zvols){
 }else {
    write-host("$no_zvols_createds ZVols created successfully")
 }
+)
+return $vol_list
 }
 
 #Function to Resize the zvol
-Function Resize-Zvol($size,$numberf_of_zvols)
+Function Resize-Zvol($size,$vol_name)
 {
 "Resizing zvol to $size.gb"
-$i=1
-Do {
-    Invoke-Expression "zfs set volsize=$size.gb mypool/vol$i"
-    "Resi zed zvol mypool/vol$i"
-    $i++
-    }
-While ($i -le $numberf_of_zvols)
+
+Invoke-Expression "zfs set volsize=$size.gb $vol_name"
+"Resized zvol mypool/vol1"
 #Verify zvols are resized successfully
 Invoke-Expression "zfs list"
 Get-Disk
 $size_in_bytes=((1073741824*$size)+4096)
-$out=Get-Disk -FriendlyName *ZVOL* |Where-Object {$_.Size -eq $size_in_bytes}
+$out=@(Get-Disk -FriendlyName *ZVOL* |Where-Object {$_.Size -eq $size_in_bytes})
 $no_zvols_resized=$out.length
-if($no_zvols_resized -ne $numberf_of_zvols){
-   write-host("ZVOL creation is not succesfull")
+if($no_zvols_resized -ne 1){
+   write-host("ZVOL resizing is not succesfull")
 }else {
-   write-host("$numberf_of_zvols ZVOLs created successfully")
+   write-host(" ZVOL resized successfully")
 }
 }
 
 $no_of_zvol=1
 $size_of_zvol_in_gb=5
 $drive = Get-Second-PhysicalDrive
-Create-Zvol $drive $size_of_zvol_in_gb $no_of_zvol
-Resize-Zvol ($size_of_zvol_in_gb*2) $no_of_zvol
+$vol_list=Create-Zvol $drive $size_of_zvol_in_gb $no_of_zvol
+$new_size=$size_of_zvol_in_gb*2
+$vol_to_be_resized=$vol_list[0]
+Resize-Zvol $new_size $vol_to_be_resized
