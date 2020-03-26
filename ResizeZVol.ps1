@@ -99,12 +99,31 @@ if($no_zvols_created -ne $numberf_of_zvols){
 }
 
 #Function to Resize the zvol
-function Resize-ZVol
+Function Resize-Zvol($size,$numberf_of_zvols)
 {
-    
+"Resizing zvol to $size.gb"
+$i=1
+Do {
+    Invoke-Expression "zfs set volsize=$size.gb mypool/vol$i"
+    "Resi zed zvol mypool/vol$i"
+    $i++
+    }
+While ($i -le $numberf_of_zvols)
+#Verify zvols are resized successfully
+Invoke-Expression "zfs list"
+Get-Disk
+$size_in_bytes=((1073741824*$size)+4096)
+$out=Get-Disk -FriendlyName *ZVOL* |Where-Object {$_.Size -eq $size_in_bytes}
+$no_zvols_resized=$out.length
+if($no_zvols_resized -ne $numberf_of_zvols){
+   write-host("ZVOL creation is not succesfull")
+}else {
+   write-host("$numberf_of_zvols ZVOLs created successfully")
+}
 }
 
 $no_of_zvol=1
 $size_of_zvol_in_gb=5
 $drive = Get-Second-PhysicalDrive
 Create-Zvol $drive $size_of_zvol_in_gb $no_of_zvol
+Resize-Zvol ($size_of_zvol_in_gb*2) $no_of_zvol
